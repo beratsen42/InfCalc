@@ -214,6 +214,13 @@
       background: var(--warn-soft);
     }
 
+    .default-note {
+      margin: 4px 0 0;
+      color: var(--warn);
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
     .input-wrap input[aria-invalid="true"] {
       border-color: var(--danger);
     }
@@ -509,9 +516,10 @@
         <div class="field span-2" id="weightField">
           <label for="weight">Hasta kilosu</label>
           <div class="input-wrap">
-            <input type="text" id="weight" inputmode="decimal" placeholder="70" value="70" autocomplete="off" class="is-default">
+            <input type="text" id="weight" inputmode="decimal" placeholder="70" value="70" autocomplete="off" class="is-default" aria-describedby="weightNote">
             <span class="suffix">kg</span>
           </div>
+          <p class="default-note" id="weightNote">Varsayılan değer (70 kg). Hastanın kilosunu girin.</p>
           <p class="error" hidden></p>
         </div>
 
@@ -908,6 +916,7 @@
           .forEach((input) => { input.value = ''; });
         el.weight.value = DEFAULT_WEIGHT;
         el.weight.classList.add('is-default');
+        $('weightNote').hidden = false;
         update();
         el.drugAmount.focus();
       }
@@ -943,7 +952,10 @@
       el.modeReverse.addEventListener('click', () => setMode('reverse'));
       el.unit.addEventListener('change', update);
       el.resetBtn.addEventListener('click', reset);
-      el.weight.addEventListener('input', () => el.weight.classList.remove('is-default'));
+      el.weight.addEventListener('input', () => {
+        el.weight.classList.remove('is-default');
+        $('weightNote').hidden = true;
+      });
       [el.drugName, el.drugAmount, el.volume, el.weight, el.dose1, el.dose2, el.rate1, el.rate2]
         .forEach((input) => input.addEventListener('input', update));
 
