@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>İnfüzyon Hızı Hesaplayıcı</title>
+  <meta name="description" content="İlaç infüzyon hızı hesaplayıcı: dozdan mL/hr, mL/hr'den doza.">
+  <meta name="theme-color" content="#f5f7fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d7c86'/%3E%3Cpath d='M16 6c-3 4.5-6 8.2-6 11.5a6 6 0 0 0 12 0C22 14.2 19 10.5 16 6z' fill='%23fff'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #0d7c86;
+      --accent-strong: #0a6870;
+      --accent-soft: #e6f4f5;
+      --on-accent: #ffffff;
+      --danger: #b91c1c;
+      --danger-soft: #fef2f2;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 16px rgba(15, 23, 42, .05);
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --surface: #111a2b;
+        --surface-2: #0e1626;
+        --border: #1f2b40;
+        --border-strong: #2c3b55;
+        --text: #e6edf6;
+        --muted: #8fa1b8;
+        --accent: #3cc4cf;
+        --accent-strong: #67d3dc;
+        --accent-soft: #12303a;
+        --on-accent: #062327;
+        --danger: #f87171;
+        --danger-soft: #2a1416;
+        --shadow: none;
+        color-scheme: dark;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    header { margin-bottom: 20px; }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* Mode switch */
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .segmented button {
+      appearance: none;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 8px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+
+    .segmented button:focus-visible,
+    .btn:focus-visible,
+    summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .span-2 { grid-column: 1 / -1; }
+
+    /* Fields */
+    .field label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: .875rem;
+      font-weight: 600;
+    }
+
+    .field .optional {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrap input,
+    .field select {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      font: inherit;
+      font-size: 16px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .input-wrap input { padding-right: 56px; }
+
+    .input-wrap .suffix {
+      position: absolute;
+      right: 12px;
+      color: var(--muted);
+      font-size: .85rem;
+      pointer-events: none;
+    }
+
+    .field select {
+      appearance: none;
+      padding-right: 36px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+
+    .input-wrap input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .input-wrap input[aria-invalid="true"] {
+      border-color: var(--danger);
+    }
+
+    .error {
+      margin: 4px 0 0;
+      color: var(--danger);
+      font-size: .8rem;
+    }
+
+    .hint {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .85rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    [hidden] { display: none !important; }
+
+    /* Result */
+    .result {
+      background: var(--accent-soft);
+      border-color: transparent;
+    }
+
+    .result h2 { color: var(--accent-strong); }
+
+    .result-summary {
+      margin: 0 0 12px;
+      font-size: .875rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-summary strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .result-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .result-item {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .result-label {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .result-value {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .result-value .num {
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-value .unit {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-strong);
+    }
+
+    .result-empty {
+      margin: 0;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    /* Math steps */
+    details.card { padding: 0; }
+
+    details summary {
+      padding: 14px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: var(--radius);
+    }
+
+    details summary::-webkit-details-marker { display: none; }
+
+    details summary::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg);
+      transition: transform .15s;
+    }
+
+    details[open] summary::after { transform: rotate(-135deg); margin-top: 6px; }
+
+    .steps {
+      padding: 0 16px 16px;
+      font-size: .875rem;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .steps h3 {
+      margin: 12px 0 6px;
+      font-size: .9rem;
+    }
+
+    .steps h3:first-child { margin-top: 0; }
+
+    .steps ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .steps li { margin-bottom: 6px; }
+
+    .steps .step-title {
+      display: block;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
+    .steps code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .85rem;
+    }
+
+    /* Actions & footer */
+    .actions { display: flex; justify-content: flex-end; }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      padding: 10px 16px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn:hover { border-color: var(--accent); }
+
+    footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: .8rem;
+      text-align: center;
+    }
+
+    @media (max-width: 359px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header>
+      <h1>İnfüzyon Hızı Hesaplayıcı</h1>
+      <p class="subtitle">Dozdan pompa hızına, pompa hızından doza.</p>
+    </header>
+
+    <div class="segmented" role="group" aria-label="Hesaplama yönü">
+      <button type="button" id="modeForward" aria-pressed="true">Doz → mL/hr</button>
+      <button type="button" id="modeReverse" aria-pressed="false">mL/hr → Doz</button>
+    </div>
+
+    <section class="card" aria-labelledby="solutionTitle">
+      <h2 id="solutionTitle">Solüsyon</h2>
+      <div class="grid">
+        <div class="field span-2">
+          <label for="drugName">İlaç adı <span class="optional">(isteğe bağlı)</span></label>
+          <div class="input-wrap">
+            <input type="text" id="drugName" placeholder="örn. Dopamin" autocomplete="off" style="padding-right:12px">
+          </div>
+        </div>
+        <div class="field">
+          <label for="drugAmount">İlaç miktarı</label>
+          <div class="input-wrap">
+            <input type="text" id="drugAmount" inputmode="decimal" placeholder="250" autocomplete="off">
+            <span class="suffix">mg</span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+        <div class="field">
+          <label for="volume">Hacim</label>
+          <div class="input-wrap">
+            <input type="text" id="volume" inputmode="decimal" placeholder="250" autocomplete="off">
+            <span class="suffix">mL</span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+      </div>
+      <p class="hint" id="concHint" hidden></p>
+    </section>
+
+    <section class="card" aria-labelledby="doseTitle">
+      <h2 id="doseTitle">Doz</h2>
+      <div class="grid">
+        <div class="field span-2">
+          <label for="unit" id="unitLabel">Doz birimi</label>
+          <select id="unit">
+            <option value="mcg_kg_min">mcg/kg/min</option>
+            <option value="mg_kg_min">mg/kg/min</option>
+            <option value="mcg_min">mcg/min</option>
+            <option value="mg_min">mg/min</option>
+            <option value="mcg_hr">mcg/hr</option>
+            <option value="mg_hr">mg/hr</option>
+          </select>
+        </div>
+        <div class="field span-2" id="weightField">
+          <label for="weight">Hasta kilosu</label>
+          <div class="input-wrap">
+            <input type="text" id="weight" inputmode="decimal" placeholder="70" autocomplete="off">
+            <span class="suffix">kg</span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+
+        <!-- Forward mode: dose in, rate out -->
+        <div class="field forward-only">
+          <label for="dose1">Doz 1</label>
+          <div class="input-wrap">
+            <input type="text" id="dose1" inputmode="decimal" placeholder="5" autocomplete="off">
+            <span class="suffix unit-suffix"></span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+        <div class="field forward-only">
+          <label for="dose2">Doz 2 <span class="optional">(isteğe bağlı)</span></label>
+          <div class="input-wrap">
+            <input type="text" id="dose2" inputmode="decimal" placeholder="10" autocomplete="off">
+            <span class="suffix unit-suffix"></span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+
+        <!-- Reverse mode: rate in, dose out -->
+        <div class="field reverse-only" hidden>
+          <label for="rate1">Hız 1</label>
+          <div class="input-wrap">
+            <input type="text" id="rate1" inputmode="decimal" placeholder="21" autocomplete="off">
+            <span class="suffix">mL/hr</span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+        <div class="field reverse-only" hidden>
+          <label for="rate2">Hız 2 <span class="optional">(isteğe bağlı)</span></label>
+          <div class="input-wrap">
+            <input type="text" id="rate2" inputmode="decimal" placeholder="42" autocomplete="off">
+            <span class="suffix">mL/hr</span>
+          </div>
+          <p class="error" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card result" aria-labelledby="resultTitle" aria-live="polite">
+      <h2 id="resultTitle">Sonuç</h2>
+      <p class="result-summary" id="resultSummary" hidden></p>
+      <div class="result-list" id="resultList"></div>
+      <p class="result-empty" id="resultEmpty"></p>
+    </section>
+
+    <details class="card" id="stepsCard">
+      <summary>Hesaplama adımları</summary>
+      <div class="steps" id="steps"></div>
+    </details>
+
+    <div class="actions">
+      <button type="button" class="btn" id="resetBtn">Temizle</button>
+    </div>
+
+    <footer>
+      Bu hesaplayıcı karar desteği içindir. Sonuçları her zaman kontrol edin.
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Each unit: is the drug amount in mg (else mcg), is it per kg, is it per hour (else per minute).
+      const UNITS = {
+        mcg_kg_min: { label: 'mcg/kg/min', mg: false, kg: true,  hr: false },
+        mg_kg_min:  { label: 'mg/kg/min',  mg: true,  kg: true,  hr: false },
+        mcg_min:    { label: 'mcg/min',    mg: false, kg: false, hr: false },
+        mg_min:     { label: 'mg/min',     mg: true,  kg: false, hr: false },
+        mcg_hr:     { label: 'mcg/hr',     mg: false, kg: false, hr: true  },
+        mg_hr:      { label: 'mg/hr',      mg: true,  kg: false, hr: true  }
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      const el = {
+        modeForward: $('modeForward'),
+        modeReverse: $('modeReverse'),
+        drugName: $('drugName'),
+        drugAmount: $('drugAmount'),
+        volume: $('volume'),
+        concHint: $('concHint'),
+        unit: $('unit'),
+        unitLabel: $('unitLabel'),
+        weightField: $('weightField'),
+        weight: $('weight'),
+        dose1: $('dose1'),
+        dose2: $('dose2'),
+        rate1: $('rate1'),
+        rate2: $('rate2'),
+        resultSummary: $('resultSummary'),
+        resultList: $('resultList'),
+        resultEmpty: $('resultEmpty'),
+        steps: $('steps'),
+        resetBtn: $('resetBtn')
+      };
+
+      let mode = 'forward';
+
+      // ---------- Formatting ----------
+
+      function fmt(n, maxFrac) {
+        return n.toLocaleString('tr-TR', {
+          maximumFractionDigits: maxFrac === undefined ? 2 : maxFrac,
+          useGrouping: false
+        });
+      }
+
+      // Up to 4 decimals, for the math steps.
+      const f4 = (n) => fmt(n, 4);
+
+      // ---------- Input parsing ----------
+
+      // Reads a number field. Accepts "2,5" and "2.5".
+      // Returns { value, empty, error }.
+      function readNumber(input) {
+        const raw = input.value.trim().replace(',', '.');
+        if (raw === '') return { value: null, empty: true, error: null };
+        if (!/^(\d+\.?\d*|\.\d+)$/.test(raw)) {
+          return { value: null, empty: false, error: 'Geçerli bir sayı girin.' };
+        }
+        const value = Number(raw);
+        if (!(value > 0)) {
+          return { value: null, empty: false, error: 'Sıfırdan büyük olmalı.' };
+        }
+        return { value: value, empty: false, error: null };
+      }
+
+      function showError(input, message) {
+        const box = input.closest('.field').querySelector('.error');
+        if (message) {
+          input.setAttribute('aria-invalid', 'true');
+          box.textContent = message;
+          box.hidden = false;
+        } else {
+          input.removeAttribute('aria-invalid');
+          box.textContent = '';
+          box.hidden = true;
+        }
+      }
+
+      // ---------- Math ----------
+
+      function toMcgPerMin(value, u, weight) {
+        let x = value;
+        if (u.mg) x *= 1000;
+        if (u.kg) x *= weight;
+        if (u.hr) x /= 60;
+        return x;
+      }
+
+      function fromMcgPerMin(mcgMin, u, weight) {
+        let x = mcgMin;
+        if (u.mg) x /= 1000;
+        if (u.kg) x /= weight;
+        if (u.hr) x *= 60;
+        return x;
+      }
+
+      // ---------- Math steps (text) ----------
+
+      function stepConcentration(mg, mL, conc) {
+        return {
+          title: 'Konsantrasyon',
+          text: f4(mg) + ' mg × 1000 mcg/mg ÷ ' + f4(mL) + ' mL = ' + f4(conc) + ' mcg/mL'
+        };
+      }
+
+      function stepToMcgMin(value, u, weight, mcgMin) {
+        if (!u.mg && !u.kg && !u.hr) {
+          return { title: 'Dozu mcg/min birimine çevir', text: f4(value) + ' mcg/min (zaten mcg/min)' };
+        }
+        let text = f4(value) + ' ' + u.label;
+        if (u.mg) text += ' × 1000 mcg/mg';
+        if (u.kg) text += ' × ' + f4(weight) + ' kg';
+        if (u.hr) text += ' ÷ 60 min/hr';
+        text += ' = ' + f4(mcgMin) + ' mcg/min';
+        return { title: 'Dozu mcg/min birimine çevir', text: text };
+      }
+
+      function stepFromMcgMin(mcgMin, u, weight, result) {
+        if (!u.mg && !u.kg && !u.hr) {
+          return { title: 'Seçilen birime çevir', text: f4(mcgMin) + ' mcg/min (zaten mcg/min)' };
+        }
+        let text = f4(mcgMin) + ' mcg/min';
+        if (u.mg) text += ' ÷ 1000 mcg/mg';
+        if (u.kg) text += ' ÷ ' + f4(weight) + ' kg';
+        if (u.hr) text += ' × 60 min/hr';
+        text += ' = ' + f4(result) + ' ' + u.label;
+        return { title: 'Seçilen birime çevir', text: text };
+      }
+
+      // ---------- Rendering ----------
+
+      // Keep typed numbers clear of the unit label inside each input.
+      function fitSuffixes() {
+        document.querySelectorAll('.input-wrap .suffix').forEach((s) => {
+          if (s.offsetWidth) s.previousElementSibling.style.paddingRight = (s.offsetWidth + 20) + 'px';
+        });
+      }
+
+      function setMode(next) {
+        mode = next;
+        const forward = mode === 'forward';
+        el.modeForward.setAttribute('aria-pressed', String(forward));
+        el.modeReverse.setAttribute('aria-pressed', String(!forward));
+        document.querySelectorAll('.forward-only').forEach((n) => { n.hidden = !forward; });
+        document.querySelectorAll('.reverse-only').forEach((n) => { n.hidden = forward; });
+        el.unitLabel.textContent = forward ? 'Doz birimi' : 'Sonuç birimi';
+        update();
+      }
+
+      function renderResultItem(label, num, unit, note) {
+        const item = document.createElement('div');
+        item.className = 'result-item';
+
+        const l = document.createElement('div');
+        l.className = 'result-label';
+        l.textContent = label + (note ? ' · ' + note : '');
+
+        const v = document.createElement('div');
+        v.className = 'result-value';
+        const n = document.createElement('span');
+        n.className = 'num';
+        n.textContent = num;
+        const u = document.createElement('span');
+        u.className = 'unit';
+        u.textContent = unit;
+        v.append(n, u);
+
+        item.append(l, v);
+        return item;
+      }
+
+      function renderSteps(blocks) {
+        el.steps.replaceChildren();
+        if (blocks.length === 0) {
+          const p = document.createElement('p');
+          p.className = 'result-empty';
+          p.textContent = 'Tüm gerekli alanlar dolunca adımlar burada görünür.';
+          el.steps.append(p);
+          return;
+        }
+        blocks.forEach((block) => {
+          const h = document.createElement('h3');
+          h.textContent = block.heading;
+          const ol = document.createElement('ol');
+          block.steps.forEach((s) => {
+            const li = document.createElement('li');
+            const t = document.createElement('span');
+            t.className = 'step-title';
+            t.textContent = s.title;
+            const c = document.createElement('code');
+            c.textContent = s.text;
+            li.append(t, c);
+            ol.append(li);
+          });
+          el.steps.append(h, ol);
+        });
+      }
+
+      function update() {
+        const forward = mode === 'forward';
+        const u = UNITS[el.unit.value];
+
+        // Unit suffix on dose fields
+        document.querySelectorAll('.unit-suffix').forEach((s) => { s.textContent = u.label; });
+        fitSuffixes();
+
+        // Weight only for per-kg units
+        el.weightField.hidden = !u.kg;
+
+        // Read all fields
+        const amount = readNumber(el.drugAmount);
+        const volume = readNumber(el.volume);
+        const weight = u.kg ? readNumber(el.weight) : { value: null, empty: false, error: null };
+        const in1 = readNumber(forward ? el.dose1 : el.rate1);
+        const in2 = readNumber(forward ? el.dose2 : el.rate2);
+
+        showError(el.drugAmount, amount.error);
+        showError(el.volume, volume.error);
+        showError(el.weight, u.kg ? weight.error : null);
+        showError(el.dose1, forward ? in1.error : null);
+        showError(el.dose2, forward ? in2.error : null);
+        showError(el.rate1, forward ? null : in1.error);
+        showError(el.rate2, forward ? null : in2.error);
+
+        // Concentration hint
+        let conc = null; // mcg/mL
+        if (amount.value !== null && volume.value !== null) {
+          conc = amount.value * 1000 / volume.value;
+          el.concHint.textContent = 'Konsantrasyon: ' + fmt(conc / 1000, 4) + ' mg/mL · ' + fmt(conc, 2) + ' mcg/mL';
+          el.concHint.hidden = false;
+        } else {
+          el.concHint.hidden = true;
+        }
+
+        // Which required fields are still missing
+        const missing = [];
+        if (amount.empty) missing.push('İlaç miktarı');
+        if (volume.empty) missing.push('Hacim');
+        if (u.kg && weight.empty) missing.push('Hasta kilosu');
+        if (in1.empty) missing.push(forward ? 'Doz 1' : 'Hız 1');
+
+        const hasError = [amount, volume, weight, in1].some((r) => r.error);
+        const ready = missing.length === 0 && !hasError;
+
+        el.resultList.replaceChildren();
+
+        if (!ready) {
+          el.resultSummary.hidden = true;
+          el.resultEmpty.hidden = false;
+          el.resultEmpty.textContent = hasError
+            ? 'Hatalı alanları düzeltin.'
+            : 'Hesaplamak için doldurun: ' + missing.join(', ') + '.';
+          renderSteps([]);
+          return;
+        }
+
+        el.resultEmpty.hidden = true;
+
+        // Summary line (kept short so a screenshot is self-explaining)
+        el.resultSummary.replaceChildren();
+        const name = el.drugName.value.trim();
+        if (name) {
+          const strong = document.createElement('strong');
+          strong.textContent = name;
+          el.resultSummary.append(strong, document.createElement('br'));
+        }
+        let summary = fmt(amount.value, 4) + ' mg / ' + fmt(volume.value, 4) + ' mL (' + fmt(conc / 1000, 4) + ' mg/mL)';
+        if (u.kg) summary += ' · ' + fmt(weight.value, 2) + ' kg';
+        el.resultSummary.append(document.createTextNode(summary));
+        el.resultSummary.hidden = false;
+
+        const w = u.kg ? weight.value : 1;
+        const inputs = [in1];
+        if (in2.value !== null) inputs.push(in2);
+
+        const stepBlocks = [];
+
+        inputs.forEach((input, i) => {
+          const n = i + 1;
+          if (forward) {
+            const mcgMin = toMcgPerMin(input.value, u, w);
+            const rate = mcgMin * 60 / conc;
+            el.resultList.append(renderResultItem('Doz ' + n, fmt(rate, 2), 'mL/hr', fmt(input.value, 4) + ' ' + u.label));
+            stepBlocks.push({
+              heading: 'Doz ' + n,
+              steps: [
+                stepConcentration(amount.value, volume.value, conc),
+                stepToMcgMin(input.value, u, w, mcgMin),
+                {
+                  title: 'Pompa hızı',
+                  text: f4(mcgMin) + ' mcg/min × 60 min/hr ÷ ' + f4(conc) + ' mcg/mL = ' + f4(rate) + ' mL/hr'
+                }
+              ]
+            });
+          } else {
+            const mcgMin = input.value * conc / 60;
+            const dose = fromMcgPerMin(mcgMin, u, w);
+            el.resultList.append(renderResultItem('Hız ' + n, fmt(dose, 3), u.label, fmt(input.value, 4) + ' mL/hr'));
+            stepBlocks.push({
+              heading: 'Hız ' + n,
+              steps: [
+                stepConcentration(amount.value, volume.value, conc),
+                {
+                  title: 'Verilen ilaç (mcg/min)',
+                  text: f4(input.value) + ' mL/hr × ' + f4(conc) + ' mcg/mL ÷ 60 min/hr = ' + f4(mcgMin) + ' mcg/min'
+                },
+                stepFromMcgMin(mcgMin, u, w, dose)
+              ]
+            });
+          }
+        });
+
+        renderSteps(stepBlocks);
+      }
+
+      function reset() {
+        [el.drugName, el.drugAmount, el.volume, el.weight, el.dose1, el.dose2, el.rate1, el.rate2]
+          .forEach((input) => { input.value = ''; });
+        update();
+        el.drugAmount.focus();
+      }
+
+      // ---------- Events ----------
+
+      el.modeForward.addEventListener('click', () => setMode('forward'));
+      el.modeReverse.addEventListener('click', () => setMode('reverse'));
+      el.unit.addEventListener('change', update);
+      el.resetBtn.addEventListener('click', reset);
+      [el.drugName, el.drugAmount, el.volume, el.weight, el.dose1, el.dose2, el.rate1, el.rate2]
+        .forEach((input) => input.addEventListener('input', update));
+
+      update();
+    })();
+  </script>
+</body>
+</html>
