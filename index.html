@@ -468,7 +468,7 @@
       <summary>Sık kullanılan doz aralıkları</summary>
       <div class="range-head"><span>İlaç</span><span>Doz</span></div>
       <div id="rangeList"></div>
-      <p class="range-note">Bir ilaca dokunun: adı, birimi ve min–max doz otomatik doldurulacak.</p>
+      <p class="range-note">Bir ilaca dokunun: adı, birimi ve doz otomatik doldurulacak.</p>
     </details>
 
     <div class="segmented" role="group" aria-label="Hesaplama yönü">
@@ -602,14 +602,15 @@
         mg_hr:      { label: 'mg/hr',      mg: true,  kg: false, hr: true  }
       };
 
-      // Common dose ranges. unit is a key of UNITS.
+      // Common dose ranges. unit is a key of UNITS. Leave out max for a single fixed dose.
       const RANGES = [
         { name: 'Dopamin',      min: 2,    max: 20,  unit: 'mcg_kg_min' },
         { name: 'Dobutamin',    min: 2,    max: 20,  unit: 'mcg_kg_min' },
         { name: 'Noradrenalin', min: 0.05, max: 1,   unit: 'mcg_kg_min' },
         { name: 'Adrenalin',    min: 0.01, max: 0.5, unit: 'mcg_kg_min' },
         { name: 'Nikardipin',   min: 5,    max: 15,  unit: 'mg_hr'      },
-        { name: 'Perlinganit',  min: 5,    max: 100, unit: 'mcg_min'    }
+        { name: 'Perlinganit',  min: 5,    max: 100, unit: 'mcg_min'    },
+        { name: 'Pantoprazol',  min: 8,              unit: 'mg_hr'      }
       ];
 
       const $ = (id) => document.getElementById(id);
@@ -939,7 +940,7 @@
           name.textContent = r.name;
           const range = document.createElement('span');
           range.className = 'range';
-          range.textContent = fmt(r.min, 2) + ' – ' + fmt(r.max, 2);
+          range.textContent = r.max === undefined ? fmt(r.min, 2) : fmt(r.min, 2) + ' – ' + fmt(r.max, 2);
           const unit = document.createElement('span');
           unit.className = 'range-unit';
           unit.textContent = UNITS[r.unit].label;
@@ -949,7 +950,7 @@
             el.drugName.value = r.name;
             el.unit.value = r.unit;
             el.dose1.value = fmt(r.min, 2);
-            el.dose2.value = fmt(r.max, 2);
+            el.dose2.value = r.max === undefined ? '' : fmt(r.max, 2);
             $('rangesCard').open = false;
             setMode('forward');
             el.drugAmount.focus();
