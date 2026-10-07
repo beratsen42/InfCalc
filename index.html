@@ -385,8 +385,6 @@
       border-bottom: 1px solid var(--border-strong);
     }
 
-    .range-head span:last-child { text-transform: none; letter-spacing: 0; }
-
     .range-row {
       width: 100%;
       appearance: none;
@@ -411,6 +409,14 @@
     .range-row .range {
       font-weight: 700;
       font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .range-row .range-unit {
+      margin-left: 4px;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 600;
     }
 
     .range-note {
@@ -460,7 +466,7 @@
 
     <details class="card ranges" id="rangesCard">
       <summary>Sık kullanılan doz aralıkları</summary>
-      <div class="range-head"><span>İlaç</span><span>mcg/kg/min</span></div>
+      <div class="range-head"><span>İlaç</span><span>Doz</span></div>
       <div id="rangeList"></div>
       <p class="range-note">Bir ilaca dokunun: adı, birimi ve min–max doz otomatik doldurulacak.</p>
     </details>
@@ -596,12 +602,14 @@
         mg_hr:      { label: 'mg/hr',      mg: true,  kg: false, hr: true  }
       };
 
-      // Common dose ranges, all in mcg/kg/min.
+      // Common dose ranges. unit is a key of UNITS.
       const RANGES = [
-        { name: 'Dopamin',      min: 2,    max: 20  },
-        { name: 'Dobutamin',    min: 2,    max: 20  },
-        { name: 'Noradrenalin', min: 0.05, max: 1   },
-        { name: 'Adrenalin',    min: 0.01, max: 0.5 }
+        { name: 'Dopamin',      min: 2,    max: 20,  unit: 'mcg_kg_min' },
+        { name: 'Dobutamin',    min: 2,    max: 20,  unit: 'mcg_kg_min' },
+        { name: 'Noradrenalin', min: 0.05, max: 1,   unit: 'mcg_kg_min' },
+        { name: 'Adrenalin',    min: 0.01, max: 0.5, unit: 'mcg_kg_min' },
+        { name: 'Nikardipin',   min: 5,    max: 15,  unit: 'mg_hr'      },
+        { name: 'Perlinganit',  min: 5,    max: 100, unit: 'mcg_min'    }
       ];
 
       const $ = (id) => document.getElementById(id);
@@ -932,10 +940,14 @@
           const range = document.createElement('span');
           range.className = 'range';
           range.textContent = fmt(r.min, 2) + ' – ' + fmt(r.max, 2);
+          const unit = document.createElement('span');
+          unit.className = 'range-unit';
+          unit.textContent = UNITS[r.unit].label;
+          range.append(unit);
           row.append(name, range);
           row.addEventListener('click', () => {
             el.drugName.value = r.name;
-            el.unit.value = 'mcg_kg_min';
+            el.unit.value = r.unit;
             el.dose1.value = fmt(r.min, 2);
             el.dose2.value = fmt(r.max, 2);
             $('rangesCard').open = false;
