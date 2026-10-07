@@ -2,7 +2,7 @@
 
 İlaç infüzyon hızı hesaplayan basit bir web uygulaması. Tek dosya: `index.html`. Sunucu gerekmez, internetten hiçbir şey yüklemez.
 
-**Canlı:** https://beratsen42.github.io/infcalc/
+**Canlı:** https://beratsen42.github.io/InfCalc/
 
 ## Özellikler
 
