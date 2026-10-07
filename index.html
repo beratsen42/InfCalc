@@ -445,7 +445,7 @@
       <summary>Sık kullanılan doz aralıkları</summary>
       <div class="range-head"><span>İlaç</span><span>mcg/kg/min</span></div>
       <div id="rangeList"></div>
-      <p class="range-note">Bir ilaca dokunun: adı ve birimi forma yazılır.</p>
+      <p class="range-note">Bir ilaca dokunun: adı, birimi ve min–max doz otomatik doldurulacak.</p>
     </details>
 
     <div class="segmented" role="group" aria-label="Hesaplama yönü">
@@ -913,8 +913,10 @@
           row.addEventListener('click', () => {
             el.drugName.value = r.name;
             el.unit.value = 'mcg_kg_min';
+            el.dose1.value = fmt(r.min, 2);
+            el.dose2.value = fmt(r.max, 2);
             $('rangesCard').open = false;
-            update();
+            setMode('forward');
             el.drugAmount.focus();
           });
           list.append(row);
