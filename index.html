@@ -346,6 +346,63 @@
       font-size: .85rem;
     }
 
+    /* Dose range reference */
+    .ranges { margin-bottom: 16px; }
+
+    .range-head,
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: baseline;
+      padding: 10px 16px;
+    }
+
+    .range-head {
+      padding-top: 0;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .range-head span:last-child { text-transform: none; letter-spacing: 0; }
+
+    .range-row {
+      width: 100%;
+      appearance: none;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .range-row:last-of-type { border-bottom: 0; }
+
+    .range-row:hover { background: var(--surface-2); }
+
+    .range-row:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .range-row .range {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .range-note {
+      margin: 0;
+      padding: 10px 16px 14px;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
     /* Actions & footer */
     .actions { display: flex; justify-content: flex-end; }
 
@@ -383,6 +440,13 @@
       <h1>İnfüzyon Hızı Hesaplayıcı</h1>
       <p class="subtitle">Dozdan pompa hızına, pompa hızından doza.</p>
     </header>
+
+    <details class="card ranges" id="rangesCard">
+      <summary>Sık kullanılan doz aralıkları</summary>
+      <div class="range-head"><span>İlaç</span><span>mcg/kg/min</span></div>
+      <div id="rangeList"></div>
+      <p class="range-note">Bir ilaca dokunun: adı ve birimi forma yazılır.</p>
+    </details>
 
     <div class="segmented" role="group" aria-label="Hesaplama yönü">
       <button type="button" id="modeForward" aria-pressed="true">Doz → mL/hr</button>
@@ -513,6 +577,14 @@
         mcg_hr:     { label: 'mcg/hr',     mg: false, kg: false, hr: true  },
         mg_hr:      { label: 'mg/hr',      mg: true,  kg: false, hr: true  }
       };
+
+      // Common dose ranges, all in mcg/kg/min.
+      const RANGES = [
+        { name: 'Dopamin',      min: 2,    max: 20  },
+        { name: 'Dobutamin',    min: 2,    max: 20  },
+        { name: 'Noradrenalin', min: 0.05, max: 1   },
+        { name: 'Adrenalin',    min: 0.01, max: 0.5 }
+      ];
 
       const $ = (id) => document.getElementById(id);
 
@@ -826,6 +898,29 @@
         el.drugAmount.focus();
       }
 
+      function renderRanges() {
+        const list = $('rangeList');
+        RANGES.forEach((r) => {
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'range-row';
+          const name = document.createElement('span');
+          name.textContent = r.name;
+          const range = document.createElement('span');
+          range.className = 'range';
+          range.textContent = fmt(r.min, 2) + ' – ' + fmt(r.max, 2);
+          row.append(name, range);
+          row.addEventListener('click', () => {
+            el.drugName.value = r.name;
+            el.unit.value = 'mcg_kg_min';
+            $('rangesCard').open = false;
+            update();
+            el.drugAmount.focus();
+          });
+          list.append(row);
+        });
+      }
+
       // ---------- Events ----------
 
       el.modeForward.addEventListener('click', () => setMode('forward'));
@@ -835,6 +930,7 @@
       [el.drugName, el.drugAmount, el.volume, el.weight, el.dose1, el.dose2, el.rate1, el.rate2]
         .forEach((input) => input.addEventListener('input', update));
 
+      renderRanges();
       update();
     })();
   </script>
